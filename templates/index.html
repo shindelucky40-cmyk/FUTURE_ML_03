@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RecruitAI — Resume Screening System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- Background Grid -->
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-bracket">[</span>
+      <span class="logo-text">RECRUIT</span><span class="logo-accent">AI</span>
+      <span class="logo-bracket">]</span>
+    </div>
+    <nav class="header-nav">
+      <span class="nav-stat" id="ds-stat">
+        <span class="stat-label">DATASET</span>
+        <span class="stat-val" id="ds-count">—</span>
+      </span>
+      <a href="https://github.com" target="_blank" class="gh-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">ML-POWERED · NLP · TF-IDF · COSINE SIMILARITY</div>
+    <h1 class="hero-title">Resume Screening<br><span class="hero-accent">Intelligence System</span></h1>
+    <p class="hero-sub">Automatically rank candidates against your job description using machine learning. Extract skills, score relevance, identify gaps — in seconds.</p>
+  </div>
+</section>
+
+<!-- Main Panel -->
+<main class="main-panel">
+
+  <!-- Mode Toggle -->
+  <div class="mode-toggle-container">
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn active" data-mode="csv" onclick="setMode('csv')">
+        <span class="mode-icon">⬡</span>
+        Screen from Dataset
+        <span class="mode-badge" id="dsCountBadge">—</span>
+      </button>
+      <button class="mode-btn" data-mode="upload" onclick="setMode('upload')">
+        <span class="mode-icon">↑</span>
+        Upload Resumes
+      </button>
+    </div>
+  </div>
+
+  <div class="panel-grid">
+
+    <!-- LEFT: Job Description -->
+    <div class="panel panel-jd">
+      <div class="panel-header">
+        <span class="panel-num">01</span>
+        <div>
+          <div class="panel-title">Job Description</div>
+          <div class="panel-sub">Paste the full role requirements</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn-ghost btn-sm" onclick="loadSampleJD()">Load Sample</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <textarea id="jobDescription" class="jd-textarea" 
+          placeholder="Paste your job description here...&#10;&#10;Example: We are looking for a Senior Data Scientist with 5+ years of experience in Python, machine learning, and statistical modeling. Must have expertise in TensorFlow, PyTorch, and scikit-learn..."></textarea>
+        <div class="jd-meta">
+          <span class="char-count" id="charCount">0 characters</span>
+          <span id="jdSkillPreview" class="skill-preview"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Options -->
+    <div class="panel panel-options">
+      <div class="panel-header">
+        <span class="panel-num">02</span>
+        <div>
+          <div class="panel-title">Configuration</div>
+          <div class="panel-sub">Set screening parameters</div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <!-- CSV Mode Options -->
+        <div id="csvOptions" class="options-group">
+          <div class="option-row">
+            <label class="option-label">
+              <span class="label-text">Candidates to Screen</span>
+              <span class="label-hint">Higher = slower but more thorough</span>
+            </label>
+            <div class="slider-wrap">
+              <input type="range" id="sampleSize" min="20" max="200" value="50" step="10"
+                     oninput="updateSlider(this.value)">
+              <span class="slider-val" id="sliderVal">50</span>
+            </div>
+          </div>
+          <div class="option-row">
+            <label class="option-label">
+              <span class="label-text">Filter by Role (optional)</span>
+              <span class="label-hint">Narrow dataset to specific job titles</span>
+            </label>
+            <input type="text" id="roleFilter" class="input-field" 
+                   placeholder="e.g. Data Scientist, Engineer..." 
+                   list="rolesList">
+            <datalist id="rolesList"></datalist>
+          </div>
+        </div>
+
+        <!-- Upload Mode Options -->
+        <div id="uploadOptions" class="options-group hidden">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="resumeFiles" multiple 
+                   accept=".pdf,.docx,.txt" style="display:none">
+            <div class="upload-icon">↑</div>
+            <div class="upload-text">Drop resumes here or <span class="upload-link" onclick="document.getElementById('resumeFiles').click()">browse</span></div>
+            <div class="upload-hint">PDF, DOCX, or TXT · Multiple files supported</div>
+          </div>
+          <div id="fileList" class="file-list hidden"></div>
+        </div>
+
+        <!-- Shared: Evaluate Button -->
+        <div class="eval-section">
+          <button class="btn-eval" id="evalBtn" onclick="evaluate()">
+            <span class="btn-eval-icon">▶</span>
+            <span class="btn-eval-text">Evaluate Candidates</span>
+            <span class="btn-eval-sub">TF-IDF · Cosine Similarity · NLP</span>
+          </button>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="info-cards">
+          <div class="info-card">
+            <div class="info-icon">≋</div>
+            <div>
+              <div class="info-title">TF-IDF Vectorization</div>
+              <div class="info-desc">Converts text to weighted term-frequency vectors</div>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="info-icon">◎</div>
+            <div>
+              <div class="info-title">Cosine Similarity</div>
+              <div class="info-desc">Measures angle between document vectors in n-D space</div>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="info-icon">⬡</div>
+            <div>
+              <div class="info-title">NLP Skill Extraction</div>
+              <div class="info-desc">Noun chunk + entity extraction pipeline</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loadingPanel" class="loading-panel hidden">
+    <div class="loading-inner">
+      <div class="loading-bars">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <div class="loading-title">Processing Candidates</div>
+      <div class="loading-steps">
+        <div class="step active" id="step1">▶ Vectorizing text with TF-IDF</div>
+        <div class="step" id="step2">◎ Computing cosine similarities</div>
+        <div class="step" id="step3">⬡ Extracting skills via NLP</div>
+        <div class="step" id="step4">↓ Ranking candidates</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Panel -->
+  <div id="resultsPanel" class="results-panel hidden">
+
+    <!-- Results Header -->
+    <div class="results-header">
+      <div class="results-title-area">
+        <div class="results-label">SCREENING RESULTS</div>
+        <div class="results-meta">
+          <span id="totalCount" class="results-total"></span>
+          <span class="results-mode-badge" id="resultModeBadge"></span>
+        </div>
+      </div>
+      <div class="results-actions">
+        <button class="btn-action" onclick="openComparison()">
+          <span>⇄</span> Compare Selected
+        </button>
+        <button class="btn-action" onclick="exportCSV()">
+          <span>↓</span> Export CSV
+        </button>
+        <button class="btn-action" onclick="exportPDF()">
+          <span>↓</span> Export PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="filterResults('all', this)">All</button>
+        <button class="filter-tab" data-filter="strong" onclick="filterResults('strong', this)">
+          <span class="dot dot-strong"></span> Strong Fit
+        </button>
+        <button class="filter-tab" data-filter="moderate" onclick="filterResults('moderate', this)">
+          <span class="dot dot-moderate"></span> Moderate Fit
+        </button>
+        <button class="filter-tab" data-filter="weak" onclick="filterResults('weak', this)">
+          <span class="dot dot-weak"></span> Weak Fit
+        </button>
+      </div>
+      <div class="search-wrap">
+        <input type="text" id="searchBox" class="search-input" 
+               placeholder="Search candidates..." 
+               oninput="searchResults(this.value)">
+      </div>
+    </div>
+
+    <!-- JD Skills -->
+    <div id="jdSkillsBar" class="jd-skills-bar hidden">
+      <span class="jd-skills-label">JD Skills Detected:</span>
+      <div id="jdSkillTags" class="skill-tags"></div>
+    </div>
+
+    <!-- Distribution Bar -->
+    <div id="distributionBar" class="distribution-bar"></div>
+
+    <!-- Results Table -->
+    <div class="table-wrap">
+      <table class="results-table" id="resultsTable">
+        <thead>
+          <tr>
+            <th class="th-check">
+              <label class="checkbox-wrap">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                <span class="checkmark"></span>
+              </label>
+            </th>
+            <th class="th-rank">RANK</th>
+            <th class="th-name">CANDIDATE</th>
+            <th class="th-score sortable" onclick="sortTable('score')">SCORE ↕</th>
+            <th class="th-fit">FIT</th>
+            <th class="th-skills">MATCHED SKILLS</th>
+            <th class="th-missing">MISSING SKILLS</th>
+            <th class="th-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<!-- Candidate Detail Modal -->
+<div id="detailModal" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-rank" id="modalRank"></div>
+        <div class="modal-name" id="modalName"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-score-bar">
+      <div class="modal-score-val" id="modalScore"></div>
+      <div class="modal-bar-bg">
+        <div class="modal-bar-fill" id="modalBarFill"></div>
+      </div>
+      <div class="modal-fit" id="modalFit"></div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Comparison Modal -->
+<div id="compareModal" class="modal-overlay hidden" onclick="closeCompareModal(event)">
+  <div class="modal-box modal-wide">
+    <div class="modal-header">
+      <div class="modal-name">Side-by-Side Comparison</div>
+      <button class="modal-close" onclick="document.getElementById('compareModal').classList.add('hidden')">✕</button>
+    </div>
+    <div id="compareBody" class="compare-body"></div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let currentMode = 'csv';
+let allResults = [];
+let filteredResults = [];
+let selectedCandidates = new Set();
+let jdSkills = [];
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadDatasetStats();
+  setupDragDrop();
+  setupJDListener();
+  setupFileInput();
+});
+
+function loadDatasetStats() {
+  fetch('/api/dataset/stats')
+    .then(r => r.json())
+    .then(data => {
+      const count = data.total.toLocaleString();
+      document.getElementById('ds-count').textContent = count;
+      document.getElementById('dsCountBadge').textContent = count;
+      // Populate role filter datalist
+      const dl = document.getElementById('rolesList');
+      (data.roles || []).forEach(role => {
+        const opt = document.createElement('option');
+        opt.value = role;
+        dl.appendChild(opt);
+      });
+    }).catch(() => {});
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  document.getElementById('csvOptions').classList.toggle('hidden', mode !== 'csv');
+  document.getElementById('uploadOptions').classList.toggle('hidden', mode !== 'upload');
+}
+
+function updateSlider(val) {
+  document.getElementById('sliderVal').textContent = val;
+}
+
+// ── JD Listener ───────────────────────────────────────────────────────────
+let jdTimer = null;
+function setupJDListener() {
+  const ta = document.getElementById('jobDescription');
+  ta.addEventListener('input', () => {
+    const len = ta.value.length;
+    document.getElementById('charCount').textContent = `${len.toLocaleString()} characters`;
+    clearTimeout(jdTimer);
+    if (len > 50) {
+      jdTimer = setTimeout(() => previewJDSkills(ta.value), 800);
+    }
+  });
+}
+
+function previewJDSkills(text) {
+  // Simple preview — no backend call
+  const keywords = text.match(/\b[A-Z][a-zA-Z0-9\+\#\.]{1,}/g) || [];
+  const unique = [...new Set(keywords)].slice(0, 8);
+  const el = document.getElementById('jdSkillPreview');
+  if (unique.length) {
+    el.innerHTML = unique.map(k => `<span class="inline-tag">${k}</span>`).join('');
+  }
+}
+
+// ── File Upload ───────────────────────────────────────────────────────────
+function setupFileInput() {
+  document.getElementById('resumeFiles').addEventListener('change', function() {
+    renderFileList(Array.from(this.files));
+  });
+}
+
+function setupDragDrop() {
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files).filter(f => 
+      f.name.match(/\.(pdf|docx|txt)$/i));
+    if (files.length) {
+      const dt = new DataTransfer();
+      files.forEach(f => dt.items.add(f));
+      document.getElementById('resumeFiles').files = dt.files;
+      renderFileList(files);
+    }
+  });
+}
+
+function renderFileList(files) {
+  const list = document.getElementById('fileList');
+  if (!files.length) { list.classList.add('hidden'); return; }
+  list.classList.remove('hidden');
+  list.innerHTML = files.map((f, i) => `
+    <div class="file-item">
+      <span class="file-ext">${f.name.split('.').pop().toUpperCase()}</span>
+      <span class="file-name">${f.name}</span>
+      <span class="file-size">${(f.size/1024).toFixed(1)} KB</span>
+    </div>
+  `).join('');
+}
+
+// ── Evaluate ──────────────────────────────────────────────────────────────
+async function evaluate() {
+  const jd = document.getElementById('jobDescription').value.trim();
+  if (!jd) { showToast('Please enter a job description', 'error'); return; }
+  if (currentMode === 'upload') {
+    const files = document.getElementById('resumeFiles').files;
+    if (!files.length) { showToast('Please upload at least one resume', 'error'); return; }
+  }
+
+  // Show loading
+  document.getElementById('loadingPanel').classList.remove('hidden');
+  document.getElementById('resultsPanel').classList.add('hidden');
+  document.getElementById('evalBtn').disabled = true;
+  animateLoadingSteps();
+
+  const formData = new FormData();
+  formData.append('mode', currentMode);
+  formData.append('job_description', jd);
+  formData.append('sample_size', document.getElementById('sampleSize')?.value || 50);
+  formData.append('role_filter', document.getElementById('roleFilter')?.value || '');
+
+  if (currentMode === 'upload') {
+    const files = document.getElementById('resumeFiles').files;
+    Array.from(files).forEach(f => formData.append('resumes', f));
+  }
+
+  try {
+    const resp = await fetch('/api/evaluate', { method: 'POST', body: formData });
+    const data = await resp.json();
+
+    if (data.error) { showToast(data.error, 'error'); return; }
+
+    allResults = data.results;
+    filteredResults = [...allResults];
+    jdSkills = data.jd_skills || [];
+    selectedCandidates.clear();
+
+    renderResults(data);
+  } catch (err) {
+    showToast('Evaluation failed. Check server.', 'error');
+    console.error(err);
+  } finally {
+    document.getElementById('loadingPanel').classList.add('hidden');
+    document.getElementById('evalBtn').disabled = false;
+  }
+}
+
+let stepTimer = null;
+function animateLoadingSteps() {
+  const steps = ['step1','step2','step3','step4'];
+  let i = 0;
+  steps.forEach(s => document.getElementById(s).classList.remove('active','done'));
+  document.getElementById(steps[0]).classList.add('active');
+  stepTimer = setInterval(() => {
+    if (i < steps.length - 1) {
+      document.getElementById(steps[i]).classList.remove('active');
+      document.getElementById(steps[i]).classList.add('done');
+      i++;
+      document.getElementById(steps[i]).classList.add('active');
+    } else clearInterval(stepTimer);
+  }, 900);
+}
+
+// ── Render Results ────────────────────────────────────────────────────────
+function renderResults(data) {
+  document.getElementById('resultsPanel').classList.remove('hidden');
+  document.getElementById('totalCount').textContent = `${data.total} candidates evaluated`;
+  document.getElementById('resultModeBadge').textContent = data.mode === 'csv' ? '⬡ Dataset' : '↑ Uploaded';
+
+  // JD Skills bar
+  if (jdSkills.length) {
+    document.getElementById('jdSkillsBar').classList.remove('hidden');
+    document.getElementById('jdSkillTags').innerHTML =
+      jdSkills.map(s => `<span class="skill-tag">${s}</span>`).join('');
+  }
+
+  renderDistribution(data.results);
+  renderTable(filteredResults);
+
+  // Scroll to results
+  document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderDistribution(results) {
+  const strong = results.filter(r => r.fit_class === 'strong').length;
+  const moderate = results.filter(r => r.fit_class === 'moderate').length;
+  const weak = results.filter(r => r.fit_class === 'weak').length;
+  const total = results.length;
+  const bar = document.getElementById('distributionBar');
+  bar.innerHTML = `
+    <div class="dist-label">Distribution:</div>
+    <div class="dist-bar-track">
+      <div class="dist-seg dist-strong" style="width:${strong/total*100}%" 
+           title="Strong Fit: ${strong}"></div>
+      <div class="dist-seg dist-moderate" style="width:${moderate/total*100}%"
+           title="Moderate Fit: ${moderate}"></div>
+      <div class="dist-seg dist-weak" style="width:${weak/total*100}%"
+           title="Weak Fit: ${weak}"></div>
+    </div>
+    <div class="dist-legend">
+      <span class="dist-item"><span class="dot dot-strong"></span>${strong} Strong</span>
+      <span class="dist-item"><span class="dot dot-moderate"></span>${moderate} Moderate</span>
+      <span class="dist-item"><span class="dot dot-weak"></span>${weak} Weak</span>
+    </div>
+  `;
+}
+
+function renderTable(results) {
+  const tbody = document.getElementById('tableBody');
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No candidates match current filter</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = results.map(r => {
+    const matchedHtml = r.matched_skills.length
+      ? r.matched_skills.slice(0,5).map(s => `<span class="skill-pill pill-match">${s}</span>`).join('')
+        + (r.matched_skills.length > 5 ? `<span class="skill-more">+${r.matched_skills.length-5}</span>` : '')
+      : '<span class="no-skills">—</span>';
+
+    const missingHtml = r.missing_skills.length
+      ? r.missing_skills.slice(0,4).map(s => `<span class="skill-pill pill-miss">${s}</span>`).join('')
+        + (r.missing_skills.length > 4 ? `<span class="skill-more">+${r.missing_skills.length-4}</span>` : '')
+      : '<span class="no-skills">—</span>';
+
+    const checked = selectedCandidates.has(r.rank) ? 'checked' : '';
+    return `
+      <tr class="candidate-row fit-${r.fit_class}" data-rank="${r.rank}" data-fit="${r.fit_class}">
+        <td class="td-check">
+          <label class="checkbox-wrap">
+            <input type="checkbox" ${checked} onchange="toggleSelect(${r.rank}, this)">
+            <span class="checkmark"></span>
+          </label>
+        </td>
+        <td class="td-rank">#${r.rank}</td>
+        <td class="td-name">
+          <div class="candidate-name">${escapeHtml(r.name)}</div>
+          ${r.career_objective ? `<div class="candidate-obj">${escapeHtml(r.career_objective.slice(0,80))}${r.career_objective.length>80?'...':''}</div>` : ''}
+        </td>
+        <td class="td-score">
+          <div class="score-wrap">
+            <div class="score-num score-${r.fit_class}">${r.score.toFixed(1)}%</div>
+            <div class="score-bar-mini">
+              <div class="score-fill-mini fill-${r.fit_class}" style="width:${r.score}%"></div>
+            </div>
+          </div>
+        </td>
+        <td class="td-fit">
+          <span class="fit-badge badge-${r.fit_class}">${r.fit_label}</span>
+        </td>
+        <td class="td-skills">${matchedHtml}</td>
+        <td class="td-missing">${missingHtml}</td>
+        <td class="td-actions">
+          <button class="btn-detail" onclick='showDetail(${JSON.stringify(r)})'>View</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── Filter & Search ───────────────────────────────────────────────────────
+function filterResults(fit, btn) {
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filteredResults = fit === 'all'
+    ? [...allResults]
+    : allResults.filter(r => r.fit_class === fit);
+  applySearch(document.getElementById('searchBox').value);
+}
+
+function searchResults(query) {
+  applySearch(query);
+}
+
+function applySearch(query) {
+  let results = filteredResults;
+  if (query.trim()) {
+    const q = query.toLowerCase();
+    results = results.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      r.fit_label.toLowerCase().includes(q) ||
+      r.matched_skills.some(s => s.toLowerCase().includes(q)) ||
+      r.missing_skills.some(s => s.toLowerCase().includes(q))
+    );
+  }
+  renderTable(results);
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────
+let sortDir = -1;
+function sortTable(field) {
+  sortDir *= -1;
+  allResults.sort((a, b) => sortDir * (a[field] - b[field]));
+  filteredResults = [...allResults];
+  renderTable(filteredResults);
+}
+
+// ── Selection ─────────────────────────────────────────────────────────────
+function toggleSelect(rank, cb) {
+  if (cb.checked) selectedCandidates.add(rank);
+  else selectedCandidates.delete(rank);
+}
+
+function toggleSelectAll(cb) {
+  document.querySelectorAll('#tableBody input[type=checkbox]').forEach(box => {
+    box.checked = cb.checked;
+    const rank = parseInt(box.closest('tr').dataset.rank);
+    if (cb.checked) selectedCandidates.add(rank);
+    else selectedCandidates.delete(rank);
+  });
+}
+
+// ── Detail Modal ──────────────────────────────────────────────────────────
+function showDetail(r) {
+  document.getElementById('modalRank').textContent = `Rank #${r.rank}`;
+  document.getElementById('modalName').textContent = r.name;
+  document.getElementById('modalScore').textContent = `${r.score.toFixed(1)}%`;
+  document.getElementById('modalFit').textContent = r.fit_label;
+  document.getElementById('modalFit').className = `modal-fit fit-text-${r.fit_class}`;
+  document.getElementById('modalBarFill').style.width = `${r.score}%`;
+  document.getElementById('modalBarFill').className = `modal-bar-fill fill-${r.fit_class}`;
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    ${r.career_objective ? `
+      <div class="modal-section">
+        <div class="modal-section-title">Career Objective</div>
+        <div class="modal-section-content">${escapeHtml(r.career_objective)}</div>
+      </div>` : ''}
+    <div class="modal-cols">
+      <div class="modal-col">
+        <div class="modal-section-title match-title">✓ Matched Skills (${r.matched_skills.length})</div>
+        <div class="skill-grid">
+          ${r.matched_skills.map(s => `<span class="skill-pill pill-match">${s}</span>`).join('') || '<span class="no-skills">None detected</span>'}
+        </div>
+      </div>
+      <div class="modal-col">
+        <div class="modal-section-title miss-title">✗ Missing Skills (${r.missing_skills.length})</div>
+        <div class="skill-grid">
+          ${r.missing_skills.map(s => `<span class="skill-pill pill-miss">${s}</span>`).join('') || '<span class="no-skills">None missing</span>'}
+        </div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">All Extracted Skills</div>
+      <div class="skill-grid">
+        ${(r.all_skills || []).map(s => `<span class="skill-pill pill-neutral">${s}</span>`).join('') || '<span class="no-skills">—</span>'}
+      </div>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
+function closeModal(e) {
+  if (e.target.id === 'detailModal') closeDetailModal();
+}
+
+// ── Comparison Modal ──────────────────────────────────────────────────────
+function openComparison() {
+  const selected = allResults.filter(r => selectedCandidates.has(r.rank));
+  if (selected.length < 2) {
+    showToast('Select at least 2 candidates to compare', 'error'); return;
+  }
+  if (selected.length > 4) {
+    showToast('Maximum 4 candidates for comparison', 'error'); return;
+  }
+
+  const body = document.getElementById('compareBody');
+  body.innerHTML = `
+    <div class="compare-grid" style="grid-template-columns: repeat(${selected.length}, 1fr)">
+      ${selected.map(r => `
+        <div class="compare-card fit-border-${r.fit_class}">
+          <div class="compare-rank">#${r.rank}</div>
+          <div class="compare-name">${escapeHtml(r.name)}</div>
+          <div class="compare-score score-${r.fit_class}">${r.score.toFixed(1)}%</div>
+          <div class="compare-bar-bg">
+            <div class="compare-bar-fill fill-${r.fit_class}" style="width:${r.score}%"></div>
+          </div>
+          <span class="fit-badge badge-${r.fit_class}">${r.fit_label}</span>
+          <div class="compare-section-title">✓ Matched (${r.matched_skills.length})</div>
+          <div class="compare-skills">
+            ${r.matched_skills.map(s => `<span class="skill-pill pill-match">${s}</span>`).join('') || '—'}
+          </div>
+          <div class="compare-section-title">✗ Missing (${r.missing_skills.length})</div>
+          <div class="compare-skills">
+            ${r.missing_skills.map(s => `<span class="skill-pill pill-miss">${s}</span>`).join('') || '—'}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('compareModal').classList.remove('hidden');
+}
+
+function closeCompareModal(e) {
+  if (e.target.id === 'compareModal')
+    document.getElementById('compareModal').classList.add('hidden');
+}
+
+// ── Export ────────────────────────────────────────────────────────────────
+function exportCSV() { window.location.href = '/api/export/csv'; }
+function exportPDF() { window.location.href = '/api/export/pdf'; }
+
+// ── Sample JD ─────────────────────────────────────────────────────────────
+function loadSampleJD() {
+  document.getElementById('jobDescription').value = `Senior Data Scientist
+
+We are looking for an experienced Senior Data Scientist to join our AI/ML team.
+
+Requirements:
+- 5+ years of experience in data science and machine learning
+- Expert proficiency in Python, with experience in TensorFlow, PyTorch, and scikit-learn
+- Strong background in statistical modeling, deep learning, and NLP
+- Experience with cloud platforms: AWS, GCP, or Azure
+- Proficiency in SQL and NoSQL databases (MongoDB, PostgreSQL)
+- Experience with data visualization tools: Tableau, Power BI
+- Familiarity with MLOps practices, Docker, Kubernetes
+- Experience with Git, CI/CD pipelines
+- Strong understanding of A/B testing and experimental design
+
+Nice to have:
+- Apache Spark for big data processing
+- Experience with Hadoop, Hive
+- Knowledge of Reinforcement Learning
+- Published research or Kaggle competition experience`;
+
+  document.getElementById('charCount').textContent = `${document.getElementById('jobDescription').value.length.toLocaleString()} characters`;
+  previewJDSkills(document.getElementById('jobDescription').value);
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+</script>
+</body>
+</html>
