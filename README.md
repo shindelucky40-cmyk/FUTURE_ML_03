@@ -1,12 +1,8 @@
 # RecruitAI — Resume Screening & Ranking System
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Flask-2.3+-000000?style=flat-square&logo=flask&logoColor=white"/>
-  <img src="https://img.shields.io/badge/scikit--learn-1.3+-F7931E?style=flat-square&logo=scikit-learn&logoColor=white"/>
-  <img src="https://img.shields.io/badge/NLP-spaCy--inspired-09A3D5?style=flat-square"/>
-  <img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square"/>
-</p>
+
+<img width="1888" height="910" alt="Screenshot 2026-02-28 102840" src="https://github.com/user-attachments/assets/48f7d34d-fd2d-46da-8db3-596345f23d8a" />
+
 
 <p align="center">
   An ML-powered web app that automatically scores, ranks, and analyzes candidates against any job description — using TF-IDF vectorization, cosine similarity, and a dynamic NLP skill extraction pipeline.
@@ -120,8 +116,10 @@ resume-screening-system/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/resume-screening-system.git
-cd resume-screening-system
+git clone https://github.com/shindelucky40-cmyk/
+FUTURE_ML_03
+cd
+FUTURE_ML_03
 
 # 2. Create and activate a virtual environment
 python -m venv venv
@@ -166,7 +164,6 @@ python -m spacy download en_core_web_sm
 - [ ] ATS integration (Greenhouse, Lever, Workday)
 
 ---
+## Author
+     lalit shinde
 
-## License
-
-MIT — free to use, modify, and distribute.
